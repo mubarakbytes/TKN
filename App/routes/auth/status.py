@@ -1,7 +1,9 @@
 from flask import jsonify, session, request
+from flask_login import login_required, current_user
 import requests
 import base64
-from DataBase.models import User
+from DataBase.models import User, StoreCreationRequest, StoreCreationRequestStatus # Import new models
+from application.extensions import db # Import db
 from . import auth_bp
 import time
 
@@ -78,4 +80,41 @@ def check_session():
     except Exception as e:
         print(f"Status check error: {str(e)}")
         # Don't expose internal errors to client
-        return jsonify({'isLoggedIn': False, 'message': 'Error checking status'}), 500 
+        return jsonify({'isLoggedIn': False, 'message': 'Error checking status'}), 500
+
+
+@auth_bp.route('/request-store-creation', methods=['POST'])
+@login_required
+def request_store_creation():
+    """Allows a logged-in user to request the ability to create a store by creating a formal request record."""
+    try:
+        # Check if the user is already approved or is already a seller
+        if current_user.is_seller:
+            return jsonify({"message": "You are already a seller."}), 400
+
+        if current_user.can_create_store:
+            return jsonify({"message": "You are already approved to create a store."}), 400
+
+        # Check for existing pending request
+        existing_pending_request = StoreCreationRequest.query.filter_by(
+            user_id=current_user.id,
+            status=StoreCreationRequestStatus.PENDING
+        ).first()
+
+        if existing_pending_request:
+            return jsonify({"message": "You already have a pending store creation request."}), 400
+
+        # Create new store creation request
+        new_request = StoreCreationRequest(
+            user_id=current_user.id,
+            status=StoreCreationRequestStatus.PENDING
+        )
+        db.session.add(new_request)
+        db.session.commit()
+
+        return jsonify({"message": "Your request to create a store has been received and is pending review."}), 202
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error during store creation request: {str(e)}") # Log for server
+        return jsonify({"error": "An internal error occurred while processing your request."}), 500

@@ -1,4 +1,5 @@
 from sqlalchemy.sql import func
+from sqlalchemy import CheckConstraint # Import CheckConstraint
 from application.extensions import db
 from flask_login import UserMixin
 
@@ -295,7 +296,7 @@ class Product(db.Model):
     rating = db.Column(db.Float, default=0.0)
     number_of_user_rating = db.Column(db.Integer, default=0)
     number_of_sales = db.Column(db.Integer, default=0)
-    stock_quantity = db.Column(db.Integer, nullable=False)
+    stock_quantity = db.Column(db.Integer, nullable=False, CheckConstraint('stock_quantity >= 0', name='ck_product_stock_quantity_non_negative'))
 
     is_verified = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
@@ -339,3 +340,23 @@ class SearchQuery(db.Model):
     def __repr__(self):
         return f"<SearchQuery {self.query}>"
 
+
+class StoreCreationRequestStatus:
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    REJECTED = 'rejected'
+
+class StoreCreationRequest(db.Model):
+    __tablename__ = 'store_creation_request'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(50), nullable=False, default=StoreCreationRequestStatus.PENDING)
+    created_at = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
+    reviewed_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    admin_reviewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    requester = db.relationship('User', foreign_keys=[user_id], backref=db.backref('store_creation_requests', lazy=True))
+    reviewer = db.relationship('User', foreign_keys=[admin_reviewer_id], backref=db.backref('reviewed_store_requests', lazy=True))
+
+    def __repr__(self):
+        return f"<StoreCreationRequest {self.id} by User {self.user_id} - {self.status}>"

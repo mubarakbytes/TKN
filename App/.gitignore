@@ -1,0 +1,67 @@
+# --- Python Virtual Environments ---
+.venv/
+venv/
+env/
+ENV/
+*.env
+
+.env
+
+# --- Python cache files and byte-compiled files ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Distribution / packaging ---
+build/
+dist/
+*.egg-info/
+*.egg
+wheels/
+pip-wheel-metadata/
+
+# --- Databases ---
+# Ignore your specific SQLite database
+Xogta.db
+# Ignore potential SQLite journal files
+Xogta.db-journal
+Xogta.db-wal
+Xogta.db-shm
+# General database files (if you use others later)
+*.sqlite3
+*.db
+
+# --- Instance folder (often used by Flask for config/db) ---
+instance/
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Test and Coverage Reports ---
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage.xml
+
+# --- IDE / Editor specific files ---
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- OS generated files ---
+.DS_Store
+Thumbs.db
+
+# --- Secrets (if you use a .env file) ---
+# .env # Uncomment if you use a .env file for secrets
+
+# --- Other ---
+pip-log.txt
+pip-delete-this-directory.txt
+celerybeat-schedule
+celerybeat.pid

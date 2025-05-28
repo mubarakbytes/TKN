@@ -1,0 +1,41 @@
+# Node.js / npm / yarn
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Vite build output
+dist/
+dist-ssr/
+*.local
+
+# Environment variables
+# Ignore all .env files, but track example files
+.env
+.env.*
+!.env.example
+!.env.development.example
+!.env.production.example
+
+# IDE / Editor directories
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Log files
+logs/
+*.log
+
+# Temporary files
+*.temp
+*.tmp

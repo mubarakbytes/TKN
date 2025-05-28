@@ -1,0 +1,29 @@
+{
+    "items": [
+      {
+        "id": 1,
+        "imagePath": "/images/watch.png",
+        "text1": "Best Deal Online on smart watches",
+        "text": "SMART WEARABLE.",
+        "text2": "UP to 70% OFF "
+      },
+
+
+      {
+        "id": 2,
+        "imagePath": "/images/Mobile.png",
+        "text1": "Best Deal Online on smart Phones",
+        "text": "BEST SMART PHONES.",
+        "text2": "UP to 40% OFF"
+      },
+
+
+      {
+        "id": 3,
+        "imagePath": "/images/laptops.png",
+        "text1": "Best Deal Online on Laptops",
+        "text": "BEST LAPTOPS.",
+        "text2": "UP to 50% OFF"
+      }
+    ]
+}

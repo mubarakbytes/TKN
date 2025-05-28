@@ -1,3 +1,4 @@
+"""Handles new user registration process."""
 from flask import request, jsonify
 from werkzeug.security import generate_password_hash
 from sqlalchemy import or_
@@ -10,6 +11,7 @@ from . import auth_bp  # Import the existing blueprint
 
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
+    """Registers a new user with the provided details."""
     try:
         data = request.get_json()
 
@@ -42,7 +44,7 @@ def signup():
             is_seller=False
         )
 
-        # Add profile image if provided and decode it to bytes
+        # Process profile image if provided
         if profile_image_b64:
             # Safe to proceed only if it's a string
             if isinstance(profile_image_b64, str):

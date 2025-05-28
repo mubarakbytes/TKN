@@ -1,3 +1,4 @@
+"""Handles user authentication, including login functionality with rate limiting and security checks."""
 from flask import request, jsonify, session
 from werkzeug.security import check_password_hash
 from sqlalchemy import func, or_
@@ -23,11 +24,13 @@ SUSPICIOUS_PATTERNS = [
 ]
 
 def is_suspicious_input(text):
+    """Checks if the input text contains patterns indicative of common web attacks."""
     if not text:
         return False
     return any(re.search(pattern, text) for pattern in SUSPICIOUS_PATTERNS)
 
 def rate_limit(f):
+    """Decorator to enforce rate limiting on login attempts based on IP and username."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         ip = request.remote_addr
@@ -73,11 +76,12 @@ def rate_limit(f):
 @auth_bp.route('/login', methods=['POST'])
 @rate_limit
 def login():
+    # Clear previous session data
     session.clear()  # Clear any existing session
     # Log login attempt time
     attempt_time = datetime.utcnow()
     
-    # Validate Content-Type
+    # Validate request content type and data
     if not request.is_json:
         return jsonify({"message": "Content-Type must be application/json"}), 400
     
@@ -91,7 +95,7 @@ def login():
     if not identifier or not password:
         return jsonify({"message": "Missing username/email or password"}), 400
 
-    # Check for suspicious input patterns
+    # Security check for suspicious input
     if is_suspicious_input(identifier):
         print(f"Suspicious login attempt detected from IP {request.remote_addr} with identifier: {identifier}")
         return jsonify({"message": "Invalid username/email or password"}), 401
@@ -100,12 +104,13 @@ def login():
     identifier = identifier.strip().lower()
     
     try:
+        # Authenticate user
         user = User.query.filter(or_(
             func.lower(User.username) == identifier,
             func.lower(User.email) == identifier
         )).first()
 
-        # Use constant time comparison for password check
+        # Password check and account status validation
         if user and check_password_hash(user.password, password):
             if not user.is_active:
                 print(f"Login attempt for inactive account: {identifier} at {attempt_time}")
@@ -125,7 +130,7 @@ def login():
             if identifier in username_attempts:
                 del username_attempts[identifier]
 
-            # Log the user in with Flask-Login
+            # Log user in and manage session
             login_user(user)
 
             # Set session with additional security measures
@@ -136,7 +141,7 @@ def login():
             session['expires_at'] = int(time.time()) + 24 * 60 * 60  # 24 hour expiry
             session['ip_address'] = request.remote_addr  # For IP binding
             
-            # Update last login timestamp
+            # Update user's last login time
             user.last_login = datetime.utcnow()
             db.session.commit()
             

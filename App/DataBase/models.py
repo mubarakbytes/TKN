@@ -2,12 +2,15 @@ from sqlalchemy.sql import func
 from application.extensions import db
 from flask_login import UserMixin
 
+# TODO: Review Admin and SuperAdmin models. They are very similar.
+# Consider merging them or implementing a more granular role-based access control (RBAC) system
+# where 'superadmin' could be a role with all permissions.
 # Admin Model
 class Admin(db.Model):
     __tablename__ = 'admin'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
+    password = db.Column(db.String(120), nullable=False)  # TODO: Hash this password securely.
 
     can_delete_users = db.Column(db.Boolean, default=False)
     can_ban_users = db.Column(db.Boolean, default=False)
@@ -28,7 +31,7 @@ class SuperAdmin(db.Model):
     __tablename__ = 'super_admin'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
+    password = db.Column(db.String(120), nullable=False)  # TODO: Hash this password securely.
 
     def __repr__(self):
         return f"<SuperAdmin {self.username}>"
@@ -105,13 +108,21 @@ class User(UserMixin, db.Model):
         return False
 
 
+class OrderStatus:
+    """Defines possible statuses for an Order."""
+    PENDING = 'Pending'
+    SHIPPED = 'Shipped'
+    DELIVERED = 'Delivered'
+    CANCELLED = 'Cancelled'
+
 class Order(db.Model):
+    """Represents a customer's order for products."""
     __tablename__ = 'order'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     store_id = db.Column(db.Integer, db.ForeignKey('store.id'), nullable=False)
     total_price = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(50), default='Pending')  # Pending, Shipped, Delivered, Cancelled
+    status = db.Column(db.String(50), default=OrderStatus.PENDING)  # See OrderStatus class for possible values
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     updated_at = db.Column(db.DateTime(timezone=True), onupdate=func.now())
     
@@ -154,15 +165,6 @@ class Cart(db.Model):
 
 
 class Wishlist(db.Model):
-    '''id = db.Column(db.Integer, primary_key=True)
-        
-        user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-        
-        product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-        
-        created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-
-        product = db.relationship('Product', backref='wishlists')'''
     __tablename__ = 'wishlist'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -174,50 +176,12 @@ class Wishlist(db.Model):
 
 # Store Model
 class Store(db.Model):
-    '''
-    id = primary_key=True
-
-    name = String(100), nullable=False, unique=True
-
-    storeUsername = String(80), unique=True, nullable=False
-
-    description = String(200), nullable=True
-
-    location = String(200), nullable=False
-
-    is_verified = Boolean, default=False
-
-    is_active = Boolean, default=True
-
-    is_banned = Boolean, default=False
-
-    number_warned = Integer, default=0
-
-    store_banner = LargeBinary, nullable=True
-
-    store_logo = LargeBinary, nullable=False
-
-    store_rating = Float, default=0.0
-
-    store_reviews = Integer, default=0
-
-    store_followers = Integer, default=0
-
-    owner_id = Integer, db.ForeignKey('user.id'
-
-    created_at = DateTime(timezone=True), server_default=func.now())
-
-    updated_at = DateTime(timezone=True), onupdate=func.now())
-
-    products = db.relationship('Product', backref='store', cascade="all, delete", lazy=True)
-    employees = db.relationship('StoreEmployee', backref='store', cascade="all, delete", lazy=True)
-    blacklists = db.relationship('Blacklist', backref='store', cascade="all, delete", lazy=True)
-    '''
+    """Represents a seller's store in the marketplace."""
     __tablename__ = 'store'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     storeUsername = db.Column(db.String(80), unique=True, nullable=False)
-    storePassword = db.Column(db.String(100))
+    storePassword = db.Column(db.String(100))  # TODO: Hash this password securely when store login is implemented.
     description = db.Column(db.String(200), nullable=True)
     location = db.Column(db.String(200), nullable=False)
 
@@ -308,8 +272,15 @@ class Blacklist(db.Model):
         return f"<Blacklist {self.id}>"
 
 
+class ProductCondition:
+    """Defines possible conditions for a Product."""
+    NEW = 'New'
+    USED = 'Used'
+    REFURBISHED = 'Refurbished'
+
 # Product Model
 class Product(db.Model):
+    """Represents a product listed for sale."""
     __tablename__ = 'product'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -319,7 +290,7 @@ class Product(db.Model):
     discount = db.Column(db.Float, default=0.0)
     available_colors = db.Column(db.String(200), nullable=True)
     available_sizes = db.Column(db.String(200), nullable=True)
-    condition = db.Column(db.String(50), nullable=False)  # New, Used, Refurbished
+    condition = db.Column(db.String(50), nullable=False)  # See ProductCondition class for possible values. Actual value set during product creation/update.
     in_stock = db.Column(db.Boolean, default=True)
     rating = db.Column(db.Float, default=0.0)
     number_of_user_rating = db.Column(db.Integer, default=0)
@@ -342,6 +313,7 @@ class Product(db.Model):
 
 # Category Model
 class Category(db.Model):
+    """Represents a category for products."""
     __tablename__ = 'category'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
